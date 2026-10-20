@@ -2,7 +2,7 @@
 
 Aplicação de exemplo para o desafio da **Aula 06 — Segurança de Rede em Nuvem I** (Segurança para Computação em Nuvem, CESAR School).
 
-Uma aplicação Flask bem simples: guarda pequenas notas de texto em um banco PostgreSQL. **A aplicação em si não é o ponto da atividade** — o que importa é a infraestrutura AWS que vai hospedá-la. Trate este código como o "que roda dentro do container"; o desafio de verdade está descrito na apostila da Aula 06.
+Uma aplicação Flask bem simples: guarda pequenas notas de texto em um banco PostgreSQL. **A aplicação em si não é o ponto da atividade** — o que importa é a infraestrutura AWS que vai hospedá-la. Trate este código como o "que roda dentro do container"; o desafio de verdade está descrito na apostila da Aula 06 (cyber)/Aula 10 (arquitetura).
 
 ## O que você recebe aqui
 
