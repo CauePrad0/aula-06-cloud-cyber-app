@@ -120,7 +120,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_vpc_security_group_ingress_rule" "alb_from_cloudfront" {
   security_group_id = aws_security_group.alb.id
-  description       = "CloudFront -> ALB"
+  description       = "CloudFront para ALB"
   prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
   ip_protocol       = "tcp"
   from_port         = local.listener_port
@@ -129,7 +129,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_from_cloudfront" {
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_app" {
   security_group_id            = aws_security_group.alb.id
-  description                  = "ALB -> tasks"
+  description                  = "ALB para tasks"
   referenced_security_group_id = aws_security_group.app.id
   ip_protocol                  = "tcp"
   from_port                    = 8080
@@ -145,7 +145,7 @@ resource "aws_security_group" "app" {
 
 resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
   security_group_id            = aws_security_group.app.id
-  description                  = "ALB -> app (8080)"
+  description                  = "ALB para app (8080)"
   referenced_security_group_id = aws_security_group.alb.id
   ip_protocol                  = "tcp"
   from_port                    = 8080
@@ -169,7 +169,7 @@ resource "aws_security_group" "db" {
 
 resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
   security_group_id            = aws_security_group.db.id
-  description                  = "app -> PostgreSQL (5432)"
+  description                  = "app para PostgreSQL (5432)"
   referenced_security_group_id = aws_security_group.app.id
   ip_protocol                  = "tcp"
   from_port                    = 5432
