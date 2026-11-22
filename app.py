@@ -14,7 +14,6 @@ Nenhuma credencial fica gravada no código-fonte (revise a Aula 05 se tiver
 dúvida sobre por que isso importa).
 """
 import os
-import threading
 import time
 from datetime import datetime, timezone
 
@@ -128,19 +127,14 @@ def index():
     return render_template("index.html", notas=notas, erro=erro, db_host=DB_HOST)
 
 
-def salvar_nota(texto):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("INSERT INTO notas (texto) VALUES (%s);", (texto,))
-        conn.commit()
-
-
 @app.route("/notas", methods=["POST"])
 def criar_nota():
     texto = request.form.get("texto", "").strip()
     if texto:
-        # "Otimização": grava a nota em segundo plano para responder mais rápido.
-        threading.Thread(target=salvar_nota, args=(texto,)).start()
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("INSERT INTO notas (texto) VALUES (%s);", (texto,))
+            conn.commit()
     return redirect(url_for("index"))
 
 
