@@ -148,4 +148,5 @@ except Exception as exc:  # noqa: BLE001
     print(f"[notas-da-nuvem] aviso: não consegui garantir o schema ainda: {exc}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=APP_PORT)
+    # O container precisa escutar em todas as interfaces para o ALB alcançar a task.
+    app.run(host="0.0.0.0", port=APP_PORT)  # nosec B104
