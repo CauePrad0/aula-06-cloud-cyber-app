@@ -15,8 +15,13 @@ phases:
       # O gitleaks precisa do histórico completo do Git (opção "Full clone" na origem do pipeline).
       - git config --global --add safe.directory "$CODEBUILD_SRC_DIR"
       - git fetch --unshallow --quiet || true
-      - gitleaks git . --redact --verbose
-      # SCA: falha (código de saída diferente de 0) se alguma dependência tiver vulnerabilidade conhecida.
-      - pip-audit -r requirements.txt
+      # As três ferramentas rodam sempre, para o log mostrar todos os achados de uma vez;
+      # cada uma que reprova entra em ACHADOS, e o build falha no final se a lista não estiver vazia.
+      - ACHADOS=""
+      # Segredos em todo o histórico do Git.
+      - gitleaks git . --redact --verbose || ACHADOS="$ACHADOS gitleaks"
+      # SCA: dependências com vulnerabilidade conhecida.
+      - pip-audit -r requirements.txt || ACHADOS="$ACHADOS pip-audit"
       # SAST: código Python fora de tests/ e scripts/, só achados de severidade média ou alta (-ll).
-      - bandit -r . -x ./tests,./scripts -ll
+      - bandit -r . -x ./tests,./scripts -ll || ACHADOS="$ACHADOS bandit"
+      - test -z "$ACHADOS" || (echo "Fitness functions de seguranca reprovadas:$ACHADOS" && false)
