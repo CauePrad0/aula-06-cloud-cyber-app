@@ -1,0 +1,4 @@
+pytest
+opentelemetry-sdk
+opentelemetry-instrumentation-flask
+opentelemetry-instrumentation-psycopg2
