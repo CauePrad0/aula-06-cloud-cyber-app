@@ -1,0 +1,37 @@
+# Fitness function de observabilidade: o POST /notas precisa gerar,
+# no mesmo trace, o span HTTP e o span do INSERT no banco.
+# Projeto CodeBuild: notas-observabilidade (modo privilegiado ligado).
+version: 0.2
+
+env:
+  variables:
+    DB_HOST: 127.0.0.1
+    DB_NAME: notasdb
+    DB_USER: notas_app
+    DB_PASSWORD: banco-descartavel-do-ci
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      # Dependências da aplicação (Flask, psycopg2) e dos testes (pytest, SDK e instrumentações do OTel).
+      - pip install --quiet -r requirements.txt -r requirements-dev.txt
+  pre_build:
+    commands:
+      # PostgreSQL descartável, só para o teste (imagem oficial espelhada no ECR Public).
+      - >-
+        docker run -d --name banco-ci -p 5432:5432
+        -e POSTGRES_DB=$DB_NAME -e POSTGRES_USER=$DB_USER -e POSTGRES_PASSWORD=$DB_PASSWORD
+        public.ecr.aws/docker/library/postgres:16-alpine
+      - for i in $(seq 1 30); do docker exec banco-ci pg_isready -h 127.0.0.1 -U $DB_USER && break; sleep 2; done
+  build:
+    commands:
+      # "python -m pytest" coloca a raiz do repositório no caminho, para o teste conseguir "import app".
+      - python -m pytest tests/ -v --junitxml=relatorio-fitness.xml
+
+reports:
+  fitness-functions:
+    files:
+      - relatorio-fitness.xml
+    file-format: JUNITXML

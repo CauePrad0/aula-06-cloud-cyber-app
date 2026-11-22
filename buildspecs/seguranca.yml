@@ -1,0 +1,22 @@
+# Fitness functions de segurança: segredos, dependências e código.
+# Projeto CodeBuild: notas-seguranca.
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar xz -C /usr/local/bin gitleaks
+      # Versões fixas: tudo o que o buildspec baixa roda com as permissões da role (Seção 9).
+      - pip install --quiet pip-audit==2.10.1 bandit==1.9.4
+  build:
+    commands:
+      # O gitleaks precisa do histórico completo do Git (opção "Full clone" na origem do pipeline).
+      - git config --global --add safe.directory "$CODEBUILD_SRC_DIR"
+      - git fetch --unshallow --quiet || true
+      - gitleaks git . --redact --verbose
+      # SCA: falha (código de saída diferente de 0) se alguma dependência tiver vulnerabilidade conhecida.
+      - pip-audit -r requirements.txt
+      # SAST: código Python fora de tests/ e scripts/, só achados de severidade média ou alta (-ll).
+      - bandit -r . -x ./tests,./scripts -ll

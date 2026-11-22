@@ -1,0 +1,29 @@
+# Build da imagem, varredura com Trivy, push no ECR e imagedefinitions.json
+# para a ação de deploy do ECS no CodePipeline.
+# Projeto CodeBuild: notas-imagem (modo privilegiado ligado), com as variáveis
+# de ambiente ECR_REPOSITORY_URI e CONTAINER_NAME.
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - curl -sSL https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz | tar xz -C /usr/local/bin trivy
+  pre_build:
+    commands:
+      - TAG=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-12)
+      - IMAGEM="$ECR_REPOSITORY_URI:$TAG"
+      # Login no ECR com credenciais temporárias da role (o registro é a URI sem o nome do repositório).
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${ECR_REPOSITORY_URI%%/*}"
+  build:
+    on-failure: ABORT
+    commands:
+      - docker build -t "$IMAGEM" .
+      # Portão: falha só em CVE CRITICAL que já tem correção. Roda ANTES do push,
+      # então uma imagem reprovada nunca chega ao ECR.
+      - trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed --no-progress --db-repository public.ecr.aws/aquasecurity/trivy-db:2 "$IMAGEM"
+      - docker push "$IMAGEM"
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$IMAGEM" > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
