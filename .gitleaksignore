@@ -1,0 +1,4 @@
+# Exceção: chave FALSA usada no teste do gitleaks da Aula 14 (nunca foi válida).
+# O arquivo config_local.py já foi removido, mas continua no histórico do Git.
+# Responsável: Cauê Baía (Grupo 04). Revisar em: 05/12/2026.
+74f19e3a52ea40bc4d2dbf42c7fc44cad314ea2b:config_local.py:aws-access-token:1
